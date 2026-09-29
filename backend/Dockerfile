@@ -17,7 +17,7 @@ RUN mvn -B -ntp clean package -DskipTests
 
 # Run as a dedicated UID. The application writes only its rolling log under
 # /app/logs; secrets are injected by Compose/secret-manager environment vars.
-FROM eclipse-temurin:21.0.8_9-jre-alpine
+FROM eclipse-temurin:24.0.2_12-jre-alpine
 
 RUN addgroup -S -g 10001 appgroup \
     && adduser -S -D -u 10001 -G appgroup appuser \
