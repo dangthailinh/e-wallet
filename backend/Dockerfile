@@ -1,7 +1,7 @@
 # Build with the same Java major version as the application. The patch-pinned
 # tags make rebuilds reproducible while still receiving image security updates
 # when this file is intentionally changed.
-FROM maven:3.9.9-eclipse-temurin-21-alpine AS builder
+FROM maven:3.9.15-eclipse-temurin-26-alpine AS builder
 
 RUN addgroup -S -g 10001 buildgroup \
     && adduser -S -D -u 10001 -G buildgroup builduser
