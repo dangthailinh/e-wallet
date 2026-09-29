@@ -1,11 +1,11 @@
 # Keep Node patch/alpine versions explicit so production builds are
 # reproducible. Dependencies and build output never enter the runtime layer.
-FROM node:20.19.1-alpine3.21 AS deps
+FROM node:25.2.1-alpine3.21 AS deps
 WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci --ignore-scripts
 
-FROM node:20.19.1-alpine3.21 AS builder
+FROM node:25.2.1-alpine3.21 AS builder
 WORKDIR /app
 ENV NEXT_TELEMETRY_DISABLED=1
 COPY --from=deps /app/node_modules ./node_modules
@@ -13,7 +13,7 @@ COPY package.json package-lock.json ./
 COPY . .
 RUN npm run build
 
-FROM node:20.19.1-alpine3.21 AS runner
+FROM node:25.2.1-alpine3.21 AS runner
 WORKDIR /app
 ENV NODE_ENV=production \
     NEXT_TELEMETRY_DISABLED=1 \
