@@ -1,0 +1,17 @@
+**/.git
+**/.gitignore
+**/.vscode
+**/.env
+**/env
+.git
+.vscode
+Dockerfile
+README.md
+node_modules
+.next
+out
+coverage
+playwright-report
+test-results
+.playwright-cli
+.env*

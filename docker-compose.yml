@@ -1,0 +1,37 @@
+name: e-wallet
+services:
+  db:
+    container_name: e-wallet-db
+    image: postgres:14.6-alpine
+    restart: always
+    environment:
+      POSTGRES_DB: ${DB_NAME:?DB_NAME is required}
+      POSTGRES_USER: ${DB_USERNAME:?DB_USERNAME is required}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD is required}
+    ports:
+      - '5432:5432'
+    volumes:
+      - ewallet_postgres_data:/var/lib/postgresql/data
+    networks:
+      - ewallet_network
+    expose:
+      - 5432
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    logging:
+      driver: 'json-file'
+      options:
+        max-size: '100m'
+        max-file: '5'
+
+volumes:
+  ewallet_postgres_data:
+    driver: local
+
+networks:
+  ewallet_network:
+    driver: bridge

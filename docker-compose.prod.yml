@@ -1,0 +1,120 @@
+name: e-wallet
+
+services:
+  db:
+    # The base file intentionally exposes PostgreSQL for local development.
+    # An empty override removes every host binding from the production graph.
+    ports: !reset []
+    expose:
+      - "5432"
+    security_opt:
+      - no-new-privileges:true
+
+  backend:
+    container_name: e-wallet-backend
+    image: ${BACKEND_IMAGE:?BACKEND_IMAGE is required}
+    restart: unless-stopped
+    environment:
+      db_name: ${DB_NAME:?DB_NAME is required}
+      db_username: ${DB_USERNAME:?DB_USERNAME is required}
+      db_password: ${DB_PASSWORD:?DB_PASSWORD is required}
+      jwt_secret: ${JWT_SECRET:?JWT_SECRET is required}
+      INVENTORY_ACTIVE_KEY_VERSION: ${INVENTORY_ACTIVE_KEY_VERSION:?INVENTORY_ACTIVE_KEY_VERSION is required}
+      INVENTORY_KEYRING: ${INVENTORY_KEYRING:?INVENTORY_KEYRING is required}
+      INVENTORY_CHECKSUM_KEY: ${INVENTORY_CHECKSUM_KEY:?INVENTORY_CHECKSUM_KEY is required}
+      APP_SECURITY_COOKIES_SECURE: "true"
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/${DB_NAME:?DB_NAME is required}
+    ports: !reset []
+    expose:
+      - "8080"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - ewallet_network
+    security_opt:
+      - no-new-privileges:true
+    tmpfs:
+      - /tmp
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:8080/actuator/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+    logging:
+      driver: json-file
+      options:
+        max-size: 100m
+        max-file: "5"
+
+  frontend:
+    container_name: e-wallet-frontend
+    image: ${FRONTEND_IMAGE:?FRONTEND_IMAGE is required}
+    restart: unless-stopped
+    environment:
+      BACKEND_ORIGIN: http://backend:8080
+      NEXT_PUBLIC_SITE_URL: https://${PUBLIC_DOMAIN:?PUBLIC_DOMAIN is required}
+      NODE_ENV: production
+      NEXT_TELEMETRY_DISABLED: "1"
+    ports: !reset []
+    expose:
+      - "3000"
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - ewallet_network
+    security_opt:
+      - no-new-privileges:true
+    tmpfs:
+      - /tmp
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:3000/ || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 45s
+    logging:
+      driver: json-file
+      options:
+        max-size: 100m
+        max-file: "5"
+
+  proxy:
+    container_name: e-wallet-proxy
+    image: caddy:2.9.1-alpine
+    restart: unless-stopped
+    environment:
+      PUBLIC_DOMAIN: ${PUBLIC_DOMAIN:?PUBLIC_DOMAIN is required}
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      frontend:
+        condition: service_healthy
+      backend:
+        condition: service_healthy
+    networks:
+      - ewallet_network
+    security_opt:
+      - no-new-privileges:true
+    logging:
+      driver: json-file
+      options:
+        max-size: 50m
+        max-file: "5"
+
+volumes:
+  caddy_data:
+    driver: local
+  caddy_config:
+    driver: local
+
+networks:
+  ewallet_network:
+    driver: bridge

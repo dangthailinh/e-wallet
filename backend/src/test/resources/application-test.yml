@@ -1,0 +1,19 @@
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+  flyway:
+    enabled: true
+    clean-disabled: true
+    locations: classpath:db/migration,classpath:db/dev
+
+app:
+  inventory:
+    crypto:
+      active-key-version: 1
+      keyring: "1:WwbszMX8gi/4G820UlcrpKMm3XNiOwfEJ4wnjg798ik="
+      checksum-key: "D6RhTtwfDR8AttrHb4Tny+mwBxC91zkFrFGnDgnBpL8="
+  security:
+    jwtSecret: test-only-secret-with-32-bytes!!
+    jwtExpirationMs: 60000
